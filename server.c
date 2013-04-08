@@ -9,20 +9,17 @@
 
 #define SERVPORT 3333 /*服务器段口号 */ 
 #define BACKLOG 10 /* 最大接收链接数*/ 
-#define BUFLEN 100
-#define SENDLEN 10
-#define RECVLEN 10
+#define BUFLEN 20
 
 int main(){
 	int sockfd,client_fd;
 	int sin_size;
 	int n;
 	unsigned char buf[BUFLEN];
-	unsigned char bufsend[SENDLEN];
-	unsigned char bufrecv[RECVLEN];
+	unsigned char *filebuf = NULL;
+	char  filename[BUFLEN];
 	memset(buf,0,BUFLEN);
-	memset(bufsend,0,SENDLEN);
-	memset(bufrecv,0,RECVLEN);
+	memset(filename,0,BUFLEN);
 	
 	struct sockaddr_in my_addr; /*本地socket地址*/ 
 	struct sockaddr_in remote_addr; /*远端socket地址*/ 
@@ -44,40 +41,63 @@ int main(){
 		perror("listen出错"); 
 		exit(1); 
 	} 
-	while(1){
 		sin_size = sizeof(struct sockaddr_in); 
 		if ((client_fd = accept(sockfd, (struct sockaddr *)&remote_addr, &sin_size))== -1) { 
 			perror("accept出错"); 
-			continue; 
+			exit(-1);
 		} 
 		printf("received a connection from %s\n", inet_ntoa(remote_addr.sin_addr));
+		
 		if((n = recv(client_fd,buf,BUFLEN,0))> 0){//接受文件名
-			printf("file name: %s\n",buf);
-			
-			printf("\nreceived %d char,receive ?[y/n]",n);//请求接收许可
-			char yn = getc(stdin);//等待用户输入,是否允许接受文件
-			char * admitsign;//信号:允许/拒绝文件接受
-			if(yn == 'y'){
-				admitsign = "ok";
-				memcpy(buf,admitsign,strlen(admitsign));
-				send(client_fd,buf,strlen(admitsign),0);
-				printf("admitted.\n");
-				int len;
-				if(recv(client_fd,&len,sizeof len,0) != 0){//接受文件大小
-					printf("file lenth: %d\n",len);
-				}
-				
-				//>>>>>>>>>>>>>后续处理,向客户端发送收到的文件大小进行确认,
-				//>>>>>>>>>>>>>准备缓冲区,开始接收文件
-			}else{//拒绝接收文件并发送拒绝信号
-				admitsign = "no";
-				memcpy(buf,admitsign,strlen(admitsign));
-				send(client_fd,buf,strlen(admitsign),0);
-				printf("denied.\n");
-			}
-			
+			memcpy(filename,buf,strlen(buf));
+			printf("file name: %s\n",filename);//打印文件名
 		}
-	}
-	printf("receive finished!\n");
+		long len;//文件长度
+		if(recv(client_fd,&len,sizeof len,0) != 0){//接受文件大小
+			printf("file lenth: %ld\n",len);
+			printf("receive ?[y/n]");//请求接收许可
+		}
+			
+		char yn = getc(stdin);//等待用户输入,是否允许接受文件
+		
+		if(yn == 'y'){
+			printf("admitted.\n");
+			
+			send(client_fd,&len,sizeof len,0);//>>>>>>>>>>>>>发送文件长度，准备缓冲区，开始接受文件内容
+												//>>>>>>>>>>>>文件内容接收完毕后向客户端发送确认信息，准备接收密钥
+												//>>>>>>>>>>>>收到密钥以后向客户端发送最终确认,中断链接
+												//>>>>>>>>>>>>进行解密并存储文件
+			//filebuf = calloc(len,sizeof(char));
+			/*
+			if(filebuf == NULL){
+				printf("fail to alloc the buffer!\n");
+				exit(-1);
+			}else{
+				while(recv(client_fd,filebuf,len,0) != 0);
+				printf("receive finished!decrypting...\n");
+				//>>>>>>>>>>>>>解密文件
+				//>>>>>>>>>>>>>存储文件
+				FILE *targetFile = NULL;
+				targetFile = fopen(filename,"wb");
+				
+				if(targetFile == NULL){
+					printf("open file failed!\n");
+					exit(-1);
+				}else{
+				//	fwrite(filebuf,sizeof(char),len,targetFile);
+				}
+				printf("all operation finished!bye\n");
+				exit(0);
+			}
+			*/
+		}else{//拒绝接收文件并发送拒绝信号
+			len = 0;
+			send(client_fd,&len,sizeof len,0);
+			printf("denied.\n");
+			close(sockfd);
+			return 0;
+		}
+	close(client_fd);
 	close(sockfd);
+	return 0;
 }
