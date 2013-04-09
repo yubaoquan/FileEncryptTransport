@@ -7,6 +7,9 @@
 #include <stdint.h>
 #include <unistd.h>
 
+#include "encrypt.h"
+#include "bit.h"
+
 #define SERVPORT 3333 /*服务器段口号 */ 
 #define BACKLOG 10 /* 最大接收链接数*/ 
 #define BUFLEN 20
