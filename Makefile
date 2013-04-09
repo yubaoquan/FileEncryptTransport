@@ -1,7 +1,7 @@
 objs = bit.o encrypt.o server.o
 objc = bit.o encrypt.o client.o
 
-all : s.exe c.exe
+all : s.exe c.exe clean
 
 s.exe : $(objs)
 	gcc -o s.exe $(objs) -lm
@@ -19,8 +19,9 @@ bit.o : bit.h bit.c
 	gcc -c bit.c
 
 encrypt.o : encrypt.h encrypt.c bit.h
-	gcc  encrypt.c
+	gcc -c encrypt.c
 
 .PHONY : clean all
 clean : 
-	-rm edit $(objs) $(objc)
+	rm -f *.o
+	
