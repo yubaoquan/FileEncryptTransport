@@ -126,7 +126,7 @@ static int des_main(const unsigned char * source,unsigned char * target,const un
 		for(j = 0; j < 28; j ++){
 			bit_set(lkey,j,bit_get(temp,j));
 			bit_set(rkey,j,bit_get(temp,j + 28));
-		}
+		}//printf("here\n");//>>>>>>>>>>>>>>>ok
 		for(i = 0; i < 16; i ++){
 			bit_rot_left(lkey,28,DesRotations[i]);//printf("here\n");??????
 			bit_rot_left(rkey,28,DesRotations[i]);
@@ -144,9 +144,8 @@ static int des_main(const unsigned char * source,unsigned char * target,const un
 	memcpy(rblk,&temp[4],4);
 	
 	for(i = 0; i < 16; i ++){
-		//处理右侧32位明文
 		memcpy(fblk,rblk,4);
-		permute(fblk,DesExpansion,48);//扩展置换
+		permute(fblk,DesExpansion,48);
 		if(direction == encipher){
 			bit_xor(fblk,subkeys[i],xblk,48);
 			memcpy(fblk,xblk,6);
@@ -154,15 +153,14 @@ static int des_main(const unsigned char * source,unsigned char * target,const un
 			bit_xor(fblk,subkeys[15 - i],xblk,48);
 			memcpy(fblk,xblk,6);
 		}
-		//处理完成
 		p = 0;
 		for(j = 0; j < 8; j ++){
 			row = (bit_get(fblk,(j * 6) + 0) * 2) + (bit_get(fblk,(j * 6) + 5) * 1);
 			col = (bit_get(fblk,(j * 6) + 1) * 8) + (bit_get(fblk,(j * 6) + 2) * 4) + (bit_get(fblk,(j + 6) + 3 * 2)) + (bit_get(fblk, (j * 6) + 4) * 1); 
 			sblk = (unsigned char)DesSbox[j][row][col];
 			for(k = 4; k < 8; k++);{
-				bit_set(fblk,p,bit_get(&sblk,k));//k之所以从4开始,因为s盒里的值都小于16,即k的高四位是0.
-				p++;										//s盒置换是六位换成四位
+				bit_set(fblk,p,bit_get(&sblk,k));
+				p++;
 			}
 		}
 		permute(fblk,DesPbox,32);
@@ -187,11 +185,3 @@ void des_decipher(const unsigned char * ciphertext,unsigned char * plaintext,con
 	des_main(ciphertext,plaintext,key,decipher);
 	return;
 }
-
-
-
-
-
-
-
-

@@ -15,11 +15,14 @@
 #define BUFLEN 20
 
 int main(){
+	
 	int sockfd,client_fd;
 	int sin_size;
-	int n;
+	int i,n;
 	unsigned char buf[BUFLEN];
-	unsigned char *filebuf = NULL;
+	unsigned char * filebuf = NULL;//接收到的文件,未解密
+	unsigned char * defilebuf = NULL;//解密后的文件
+	char  finishSign = 'f';
 	char  filename[BUFLEN];
 	memset(buf,0,BUFLEN);
 	memset(filename,0,BUFLEN);
@@ -65,21 +68,35 @@ int main(){
 		
 		if(yn == 'y'){
 			printf("admitted.\n");
+			//发送文件长度，准备缓冲区
+			send(client_fd,&len,sizeof len,0);
+			filebuf = calloc(len,sizeof(char));
+			defilebuf = calloc(len,sizeof(char));
 			
-			send(client_fd,&len,sizeof len,0);//>>>>>>>>>>>>>发送文件长度，准备缓冲区，开始接受文件内容
-												//>>>>>>>>>>>>文件内容接收完毕后向客户端发送确认信息，准备接收密钥
-												//>>>>>>>>>>>>收到密钥以后向客户端发送最终确认,中断链接
-												//>>>>>>>>>>>>进行解密并存储文件
-			//filebuf = calloc(len,sizeof(char));
-			/*
 			if(filebuf == NULL){
 				printf("fail to alloc the buffer!\n");
 				exit(-1);
 			}else{
-				while(recv(client_fd,filebuf,len,0) != 0);
-				printf("receive finished!decrypting...\n");
-				//>>>>>>>>>>>>>解密文件
-				//>>>>>>>>>>>>>存储文件
+				char key[8];
+				n = recv(client_fd,filebuf,len,0);
+				if(n != 0){
+					printf("receiving...\n");
+					printf("%d\n",n);
+				}
+				//文件内容接收完毕后向客户端发送确认信息，准备接收密钥
+				send(client_fd,&yn,sizeof(yn),0);
+				printf("receive finished!now receiving the the key...\n");
+				recv(client_fd,key,8 * sizeof(char),0);
+				printf("the key is %ld\n",*(long *)key);
+				//收到密钥以后向客户端发送最终确认,中断链接
+				send(client_fd,&finishSign,sizeof(finishSign),0);
+				//解密文件
+				
+				for(i = 0;i <= len; i += 8){
+					des_decipher(filebuf + i,defilebuf + i,key);
+					//printf("i = %d, %s\n",i,defilebuf + i);
+				}
+				//存储文件
 				FILE *targetFile = NULL;
 				targetFile = fopen(filename,"wb");
 				
@@ -87,12 +104,12 @@ int main(){
 					printf("open file failed!\n");
 					exit(-1);
 				}else{
-				//	fwrite(filebuf,sizeof(char),len,targetFile);
+					fwrite(defilebuf,sizeof(char),len,targetFile);
 				}
 				printf("all operation finished!bye\n");
 				exit(0);
 			}
-			*/
+			
 		}else{//拒绝接收文件并发送拒绝信号
 			len = 0;
 			send(client_fd,&len,sizeof len,0);
