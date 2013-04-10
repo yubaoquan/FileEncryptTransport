@@ -105,7 +105,9 @@ int main(){
 					exit(-1);
 				}else{
 					fwrite(defilebuf,sizeof(char),len,targetFile);
+					//fclose(targetFile);
 				}
+				
 				printf("all operation finished!bye\n");
 				exit(0);
 			}
@@ -117,6 +119,12 @@ int main(){
 			close(sockfd);
 			return 0;
 		}
+	
+	free(filebuf);
+	filebuf = NULL;
+	free(defilebuf);
+	defilebuf = NULL;
+	
 	close(client_fd);
 	close(sockfd);
 	return 0;

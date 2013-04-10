@@ -15,13 +15,12 @@
 #define SERVERPORT 3333 /*server's port */ 
 
 int main(int argc, char *argv[]){
-// 	int i,j;
-	if(argc == 1){
-		printf("need more argument!\n");
-		return -1;
-	}
+
 	FILE * fileToSend = NULL;
-	char * filename = argv[1];
+	char filename[20];// = argv[1];
+	printf("请输入要传输的文件名：\n");
+	scanf("%s",filename);
+	printf("filename: %s\n",filename);
 	fileToSend = fopen(filename,"rb");
 	
 	if(fileToSend == NULL){
@@ -30,7 +29,9 @@ int main(int argc, char *argv[]){
 	}
 	
 	int sockfd;
-	char * localhost = "127.0.0.1";
+	char localhost[20];// = "127.0.0.1";
+	printf("请输入要传输到的主机IP：\n");
+	scanf("%s",localhost);
 	unsigned char * fileBuf = NULL;
 	unsigned char * encryptBuf = NULL;
 	int i;
@@ -42,6 +43,7 @@ int main(int argc, char *argv[]){
 	
 	
 	fileBuf = calloc(filesize,sizeof(char));//初始化文件缓冲区
+	//printf("before encrypt fileBuf: %ld\n",(long)fileBuf);
 	encryptBuf = calloc(filesize,sizeof(char));//初始化加密缓冲区
 	
 	if(fileBuf == NULL || encryptBuf == NULL){
@@ -50,9 +52,7 @@ int main(int argc, char *argv[]){
 	}
 	fseek(fileToSend,0,SEEK_SET);//指针指向文件开头
 	fread(fileBuf,sizeof(unsigned char), filesize,fileToSend);//读入文件
-	//>>>>>>>>>>>>>>>>
-	//fseek(fileBuf,0,SEEK_SET);//指针指向文件开头
-	//>>>>>>>>>>>>>>>>>
+	fclose(fileToSend);
 	//获取当前系统时间、对密钥赋值初始化
 	time_t timekey = time(NULL);//long 32bit
 	unsigned char key[8];
@@ -112,6 +112,14 @@ int main(int argc, char *argv[]){
 	}
 	//中断连接
 	close(sockfd);
+	//释放动态内存
+	/*
+	printf("after encrypt fileBuf: %ld\n",(long)fileBuf);
+	free(fileBuf);
+	fileBuf = NULL;
+	printf("here\n");
+	free(encryptBuf);
+	encryptBuf = NULL;*/
     exit(0);
 
 }
