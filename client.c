@@ -34,17 +34,17 @@ int main(int argc, char *argv[]){
 	scanf("%s",localhost);
 	unsigned char * fileBuf = NULL;
 	unsigned char * encryptBuf = NULL;
-	int i;
+	int i = 0;
     struct sockaddr_in servaddr;
 	
 	//获取文件长度
 	fseek(fileToSend,0,SEEK_END);
 	long filesize = ftell(fileToSend);
 	
-	
-	fileBuf = calloc(filesize,sizeof(char));//初始化文件缓冲区
+	int bu = 8 - (filesize % 8);//用于申请内存时使内存的大小是8的整数倍，避免加密时指针越界
+	fileBuf = calloc(filesize + bu,sizeof(char));//初始化文件缓冲区
 	//printf("before encrypt fileBuf: %ld\n",(long)fileBuf);
-	encryptBuf = calloc(filesize,sizeof(char));//初始化加密缓冲区
+	encryptBuf = calloc(filesize + bu,sizeof(char));//初始化加密缓冲区
 	
 	if(fileBuf == NULL || encryptBuf == NULL){
 		printf("calloc buffer for file failed!\n");
@@ -61,10 +61,10 @@ int main(int argc, char *argv[]){
 
 	//开始加密
 	
-	for(i = 0;i <= filesize; i += 8){
+	for(i = 0;i < filesize; i += 8){
 		des_encipher(fileBuf + i,encryptBuf + i,key);
-		//printf("i = %d, %s\n",i,fileBuf + i);
 	}
+		
     if((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0){
 	    perror("error creating socket!\n");
 	    exit(-1);
@@ -113,13 +113,11 @@ int main(int argc, char *argv[]){
 	//中断连接
 	close(sockfd);
 	//释放动态内存
-	/*
-	printf("after encrypt fileBuf: %ld\n",(long)fileBuf);
+	
 	free(fileBuf);
 	fileBuf = NULL;
-	printf("here\n");
 	free(encryptBuf);
-	encryptBuf = NULL;*/
+	encryptBuf = NULL;
     exit(0);
 
 }
