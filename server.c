@@ -92,7 +92,7 @@ int main(){
 				send(client_fd,&finishSign,sizeof(finishSign),0);
 				//解密文件
 				
-				for(i = 0;i <= len; i += 8){
+				for(i = 0;i < len; i += 8){
 					des_decipher(filebuf + i,defilebuf + i,key);
 					//printf("i = %d, %s\n",i,defilebuf + i);
 				}
