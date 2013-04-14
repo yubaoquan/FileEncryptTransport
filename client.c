@@ -11,13 +11,14 @@
 
 #include "encrypt.h"
 #include "bit.h"
+#include "client.h"
 
 #define SERVERPORT 3333 /*server's port */ 
 
-int main(int argc, char *argv[]){
+int main_c(void){
 
 	FILE * fileToSend = NULL;
-	char filename[20];// = argv[1];
+	char filename[20];
 	printf("请输入要传输的文件名：\n");
 	scanf("%s",filename);
 	printf("filename: %s\n",filename);

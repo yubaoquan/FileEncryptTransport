@@ -9,12 +9,13 @@
 
 #include "encrypt.h"
 #include "bit.h"
+#include "server.h"
 
 #define SERVPORT 3333 /*服务器段口号 */ 
 #define BACKLOG 10 /* 最大接收链接数*/ 
 #define BUFLEN 20
 
-int main(){
+int main_s(void){
 	
 	int sockfd,client_fd;
 	int sin_size;
@@ -63,9 +64,8 @@ int main(){
 			printf("file lenth: %ld\n",len);
 			printf("receive ?[y/n]");//请求接收许可
 		}
-			
+		setbuf(stdin,NULL)	;//清空输入缓冲区
 		char yn = getc(stdin);//等待用户输入,是否允许接受文件
-		
 		if(yn == 'y'){
 			printf("admitted.\n");
 			//发送文件长度，准备缓冲区
